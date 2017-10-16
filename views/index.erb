@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+<head>
+  <title>Rtanque Web</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.min.js" integrity="sha256-aXHOBRCjmgqoEhY6VBWs3Bc+E3447Iuywezt+nkgeZk=" crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/codemirror.min.js" integrity="sha256-AqnMwc9Kk6sJShDo5QGwu2Ea9MzSR+iSWy4nJV+gRRU=" crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/mode/ruby/ruby.min.js" integrity="sha256-vS5G2S3J4n1CC7tjQARJTaA+HpalLRYuqJHoVzA4w+o=" crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/keymap/sublime.min.js" integrity="sha256-Q6FWy0CfPab7AeX3j9qS9I56SaQI2/QOzfnQHzlIsnA=" crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/addon/edit/matchbrackets.min.js" integrity="sha256-ThmueubAFD3PJUJjwKTBZX1E7p5V46LMJbtwjdcnz2k=" crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/addon/scroll/simplescrollbars.min.js" integrity="sha256-qzEfyE/ZUWAvTWVnSdx91kmL2AoFG5KcUdNJVT1r1wA=" crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/addon/hint/anyword-hint.min.js" integrity="sha256-scWjx2AMD56TxpDgpdNnDwMvgln2kVJPT4bITvEU++s=" crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/addon/hint/show-hint.min.js" integrity="sha256-OvxDPyq6KQAoWh11DLJdBVlHHLkYYiy4EzqTjIEJbb4=" crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/addon/selection/active-line.min.js" integrity="sha256-R2QQ+/NdoMQdFeOCtiTg5NSBF8DI8+1+6W8P2WJ6LGg=" crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/codemirror.min.css" integrity="sha256-wluO/w4cnorJpS0JmcdTSYzwdb5E6u045qa4Ervfb1k=" crossorigin="anonymous" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/theme/monokai.min.css" integrity="sha256-6ov3WWd9ybfZPeJBlXBgQuD/aLhTRCEp5kBhqD9ke0o=" crossorigin="anonymous" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/addon/hint/show-hint.min.css" integrity="sha256-Ng5EdzHS/CC37tR7tE75e4Th9+fBvOB4eYITOkXS22Q=" crossorigin="anonymous" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/addon/scroll/simplescrollbars.css" integrity="sha256-4mk7VKvNIWjYnA+rExxtLNsjGaPPI5ql2BRAgmFxQ0E=" crossorigin="anonymous" />
+
+</head>
+<body>
+
+  <textarea id="code"></textarea>
+  <input type="button" value="send" id="send">
+
+  <script type="text/javascript">
+    CodeMirror.commands.autocomplete = function(cm) {
+      CodeMirror.showHint(cm, CodeMirror.hint.anyword)
+    }
+
+    var sampleCode = `class A
+  def x
+    puts 'calling x in A instance'
+  end
+end
+
+a = A.new
+a.x`
+
+    var codeMirrorSettings = {
+      mode: 'ruby',
+      theme: 'monokai',
+      keyMap: 'sublime',
+      lineNumbers: true,
+      lineWrapping: true,
+      scrollbarStyle: 'overlay',
+      styleActiveLine: true,
+      matchBrackets: true,
+      tabSize: 2,
+      smartIndent: true,
+      autofocus: true,
+      cursorScrollMargin: 25,
+
+      extraKeys: {
+        "Ctrl-Space": "autocomplete",
+        "Ctrl-Y": "autocomplete"
+      }
+    }
+
+    var setUpCodeMirror = function() {
+      window.editor = CodeMirror.fromTextArea(document.getElementById("code"), codeMirrorSettings)
+      editor.setValue(sampleCode)
+    }
+
+    document.addEventListener('DOMContentLoaded', function(){
+      setUpCodeMirror()
+      setUpClickEvent()
+    })
+
+    var setUpClickEvent = function(){
+      document.getElementById('send').addEventListener('click',  function(){
+        var fd = new FormData()
+        fd.append('code', editor.getValue())
+
+        axios.post('/', fd)
+      })
+    }
+
+  </script>
+</body>
+</html>
