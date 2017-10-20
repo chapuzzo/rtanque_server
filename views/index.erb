@@ -21,6 +21,8 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/addon/selection/active-line.min.js" integrity="sha256-R2QQ+/NdoMQdFeOCtiTg5NSBF8DI8+1+6W8P2WJ6LGg=" crossorigin="anonymous"></script>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/addon/comment/comment.min.js" integrity="sha256-HYX1RusN7a369vYuOd1mGvxLcNL4z/MihkahAI2CH8k=" crossorigin="anonymous"></script>
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/codemirror.min.css" integrity="sha256-wluO/w4cnorJpS0JmcdTSYzwdb5E6u045qa4Ervfb1k=" crossorigin="anonymous" />
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/theme/monokai.min.css" integrity="sha256-6ov3WWd9ybfZPeJBlXBgQuD/aLhTRCEp5kBhqD9ke0o=" crossorigin="anonymous" />
@@ -29,11 +31,47 @@
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/addon/scroll/simplescrollbars.css" integrity="sha256-4mk7VKvNIWjYnA+rExxtLNsjGaPPI5ql2BRAgmFxQ0E=" crossorigin="anonymous" />
 
+  <style type="text/css">
+    .controls {
+      text-align: center;
+    }
+
+    input[type=button].button,
+    label.button {
+      border: 1px black solid;
+      border-radius: 3px;
+      background: darkgrey;
+      padding: 5px 10px;
+      font-family: monospace;
+      font-size: 1em;
+      color: black;
+      margin: 3px;
+      display: inline-block;
+      cursor: pointer;
+    }
+
+    #clear {
+      background-color: #B78E8E
+    }
+
+    #send {
+      background-color: #8EB79B
+    }
+
+  </style>
 </head>
 <body>
 
   <textarea id="code"></textarea>
-  <input type="button" value="send" id="send">
+  <div class="controls">
+    <label id="load" for="file_load" class="button">
+      <input id="file_load" type="file" style="display:none" multiple>
+      load"
+    </label>
+    <input type="button" value="send" id="send" class="button">
+    <input type="button" value="clear" id="clear" class="button">
+  </div>
+
 
   <script type="text/javascript">
     CodeMirror.commands.autocomplete = function(cm) {
@@ -65,7 +103,8 @@ a.x`
 
       extraKeys: {
         "Ctrl-Space": "autocomplete",
-        "Ctrl-Y": "autocomplete"
+        "Ctrl-Y": "autocomplete",
+        "Shift-Alt-7": 'toggleCommentIndented'
       }
     }
 
@@ -74,19 +113,52 @@ a.x`
       editor.setValue(sampleCode)
     }
 
-    document.addEventListener('DOMContentLoaded', function(){
-      setUpCodeMirror()
-      setUpClickEvent()
-    })
-
-    var setUpClickEvent = function(){
+    var setUpSendToServer = function(){
       document.getElementById('send').addEventListener('click',  function(){
         var fd = new FormData()
         fd.append('code', editor.getValue())
 
-        axios.post('/', fd)
+        axios.post('/quick_match', fd)
       })
     }
+
+    var readFileContents = function(file, callback){
+      var fileReader = new FileReader()
+
+      fileReader.onload = function(event){
+        callback(event.target.result)
+      }
+
+      fileReader.readAsText(file)
+    }
+
+    var setUpFileLoad = function(){
+      document.getElementById('file_load').addEventListener('change',  function(event){
+        editor.setValue('')
+
+
+        Array.prototype.forEach.call(event.target.files, function(file){
+          console.log(file)
+
+          readFileContents(file, function(textToAdd){
+            editor.setValue(editor.getValue() + '\n' + textToAdd)
+          })
+        })
+      })
+    }
+
+    var setUpClear = function(){
+      document.getElementById('clear').addEventListener('click',  function(){
+        editor.setValue('')
+      })
+    }
+
+    document.addEventListener('DOMContentLoaded', function(){
+      setUpCodeMirror()
+      setUpSendToServer()
+      setUpFileLoad()
+      setUpClear()
+    })
 
   </script>
 </body>
