@@ -1,16 +1,18 @@
+require 'securerandom'
 require 'sinatra/base'
 require 'rtanque'
 require 'json'
 require 'ap'
 
-ImportedBots = Module.new
-
 class App < Sinatra::Base
+
+  ImportedBots = Module.new
+  Matches = {}
   get '/' do
     erb :index
   end
 
-  post '/quick_match' do
+  post '/quick_match', provides: :json do
     classes = extract_class_from(params[:code], Object)
     ap classes
 
@@ -56,7 +58,6 @@ class App < Sinatra::Base
 
     watchdog.join
 
-
     survivors = match.bots.map do |bot|
       puts "#{bot.name} [#{bot.health.round}]"
       {
@@ -75,10 +76,56 @@ class App < Sinatra::Base
     }.to_json
   end
 
+  post '/match/create', provides: :json do
+    created_match = {
+      brains: []
+    }
+
+    match_name = SecureRandom.uuid
+
+    Matches[match_name] = created_match
+
+    {
+      status: :ok,
+      match: match_name
+    }.to_json
+  end
+
+  post '/match/:match/add_bot', provides: :json do
+    return {
+      status: :ko,
+      reason: :unexisting_match
+    }.to_json if Matches[params[:match]].nil?
+
+    match = Matches[params[:match]]
+
+    classes = class_diff(params[:code], Object, Class.new)
+
+    bot_brain_classes = get_descendants_of_class(RTanque::Bot::Brain)
+    new_brains = bot_brain_classes - match[:brains]
+
+    match[:brains].push(*(new_brains))
+
+    {
+      status: :ok
+    }.to_json
+  end
+
+  get '/match/:match/watch' do
+
+  end
+
   helpers do
+
+    def class_diff from, under, to
+      current_object_space = get_descendants_of_class(under)
+      to.class_eval(from)
+      get_descendants_of_class(under) - current_object_space
+    end
+
     def extract_class_from io, under
       current_object_space = get_descendants_of_class(under)
-      ImportedBots.class_eval(io)
+      ImportedBots.module_eval(io)
       get_descendants_of_class(under) - current_object_space
     end
 

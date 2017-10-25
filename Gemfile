@@ -15,3 +15,9 @@ gem 'rtanque_core', :git => 'https://github.com/devscola/RTanque', branch: 'core
 #128136407782923977893128174584925289649
 #103729390752205011618857802705433681202
 #killer seeds
+
+
+group :test do
+  gem 'rspec'
+  gem 'rack-test'
+end
