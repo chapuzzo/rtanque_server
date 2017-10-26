@@ -1,4 +1,7 @@
-<h2>participants</h2>
+<h2>Participants</h2>
+<% if participants.empty? %>
+  <span>No participants yet, go add one :)</span>
+<% end%>
 <ul>
   <% participants.each do |participant| %>
     <li>
