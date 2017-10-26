@@ -103,7 +103,9 @@ class App < Sinatra::Base
     classes = class_diff(params[:code], Object, Class.new)
     bot_brain_classes = get_descendants_of_class(RTanque::Bot::Brain)
 
-    new_brains = (bot_brain_classes - match[:brains])
+    new_brains = (bot_brain_classes - match[:brains]).select do |brain|
+      classes.include? brain
+    end
 
     match[:brains].push(*(new_brains))
 
