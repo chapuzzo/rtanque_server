@@ -1,0 +1,154 @@
+<h2>participants</h2>
+<ul>
+  <% participants.each do |participant| %>
+    <li>
+      <span><%= participant %></span>
+    </li>
+  <% end %>
+</ul>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.min.js" integrity="sha256-aXHOBRCjmgqoEhY6VBWs3Bc+E3447Iuywezt+nkgeZk=" crossorigin="anonymous"></script>
+
+<input class="button" id="play-match" type="button" value="View Match">
+<label class="button" for="add-bots">Add Bots</label>
+
+<input hidden id="add-bots" type="checkbox" autocomplete="off">
+<div id="editor">
+  <textarea id="code"></textarea>
+  <div class="controls">
+    <label id="load" for="file_load" class="button">
+      <input id="file_load" type="file" hidden multiple>
+      load"
+    </label>
+    <input type="button" value="add" id="add" class="button">
+    <input type="button" value="clear" id="clear" class="button">
+    <label class="button" for="add-bots">cancel</label>
+  </div>
+</div>
+
+<style type="text/css">
+  #add-bots + #editor {
+    display: none;
+  }
+
+  #add-bots:checked + #editor {
+    display: block;
+  }
+
+  #editor .controls {
+    text-align: center;
+  }
+
+  #clear {
+    background-color: #B78E8E
+  }
+
+  #add {
+    background-color: #8EB79B
+  }
+</style>
+
+<script>
+
+  var sampleCode = `class MyKillerBot < RTanque::Bot::Brain
+  def tick!
+    puts 'doing somethin very killer'
+  end
+end
+`
+  var setUpCompletions = function(){
+    CodeMirror.commands.autocomplete = function(cm) {
+      CodeMirror.showHint(cm, CodeMirror.hint.anyword)
+    }
+  }
+
+  var codeMirrorSettings = {
+    mode: 'ruby',
+    theme: 'monokai',
+    keyMap: 'sublime',
+    lineNumbers: true,
+    lineWrapping: true,
+    scrollbarStyle: 'overlay',
+    styleActiveLine: true,
+    matchBrackets: true,
+    tabSize: 2,
+    smartIndent: true,
+    autofocus: true,
+    cursorScrollMargin: 25,
+
+    extraKeys: {
+      "Ctrl-Space": "autocomplete",
+      "Shift-Alt-7": "autocomplete",
+      "Shift-Ctrl-7": 'toggleCommentIndented'
+    }
+  }
+
+  var setUpCodeMirror = function() {
+    window.editor = CodeMirror.fromTextArea(document.getElementById("code"), codeMirrorSettings)
+    editor.setValue(sampleCode)
+  }
+
+  var setUpSendToServer = function(match){
+    document.getElementById('add').addEventListener('click',  function(){
+      var fd = new FormData()
+      fd.append('code', editor.getValue())
+
+      axios.post(`/matches/${match}/add_bots`, fd).then(function(){
+        console.log('bot added')
+        location.reload()
+      }).catch(function(){
+        console.log('error occured')
+      })
+    })
+  }
+
+  var readFileContents = function(file, callback){
+    var fileReader = new FileReader()
+
+    fileReader.onload = function(event){
+      callback(event.target.result)
+    }
+
+    fileReader.readAsText(file)
+  }
+
+  var setUpFileLoad = function(){
+    document.getElementById('file_load').addEventListener('change',  function(event){
+      editor.setValue('')
+
+      Array.prototype.forEach.call(event.target.files, function(file){
+        console.log(file)
+
+        readFileContents(file, function(textToAdd){
+          editor.setValue(editor.getValue() + '\n' + textToAdd)
+        })
+      })
+    })
+  }
+
+  var setUpClear = function(){
+    document.getElementById('clear').addEventListener('click',  function(){
+      editor.setValue('')
+    })
+  }
+
+  var setUpEditor = function(){
+    console.log('settingupeditor')
+    setUpCompletions()
+    setUpCodeMirror()
+    setUpSendToServer('<%= match_id %>')
+    setUpFileLoad()
+    setUpClear()
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    var toggleEditor = document.getElementById('add-bots')
+
+    var editorSetUpper = function(){
+      setUpEditor()
+      toggleEditor.removeEventListener('change', editorSetUpper)
+    }
+
+    toggleEditor.addEventListener('change', editorSetUpper)
+  })
+</script>

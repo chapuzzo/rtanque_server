@@ -8,8 +8,9 @@ class App < Sinatra::Base
 
   ImportedBots = Module.new
   Matches = {}
+
   get '/' do
-    erb :index
+    erb :quick_match, layout: false
   end
 
   post '/quick_match', provides: :json do
@@ -76,7 +77,7 @@ class App < Sinatra::Base
     }.to_json
   end
 
-  post '/match/create', provides: :json do
+  post '/matches/create', provides: :json do
     created_match = {
       brains: []
     }
@@ -91,18 +92,18 @@ class App < Sinatra::Base
     }.to_json
   end
 
-  post '/match/:match/add_bot', provides: :json do
+  post '/matches/:match/add_bots', provides: :json do |match_id|
     return {
       status: :ko,
       reason: :unexisting_match
-    }.to_json if Matches[params[:match]].nil?
+    }.to_json if Matches[match_id].nil?
 
-    match = Matches[params[:match]]
+    match = Matches[match_id]
 
     classes = class_diff(params[:code], Object, Class.new)
-
     bot_brain_classes = get_descendants_of_class(RTanque::Bot::Brain)
-    new_brains = bot_brain_classes - match[:brains]
+
+    new_brains = (bot_brain_classes - match[:brains])
 
     match[:brains].push(*(new_brains))
 
@@ -111,12 +112,27 @@ class App < Sinatra::Base
     }.to_json
   end
 
-  get '/match/:match/watch' do
+  get '/matches' do
+    matches_list = Matches.map { |id, match|
+      {
+        id: id,
+        participants: match[:brains].map { |k| k.name.split('::').last }
+      }
+    }
 
+    erb :match_list, locals: { matches: matches_list }
+  end
+
+  get '/matches/:match' do |match_id|
+    return [404, 'unexisting_match'] if Matches[match_id].nil?
+
+    erb :show_match, locals: {
+      participants: Matches[match_id][:brains].map { |k| k.name.split('::').last },
+      match_id: match_id
+    }
   end
 
   helpers do
-
     def class_diff from, under, to
       current_object_space = get_descendants_of_class(under)
       to.class_eval(from)
