@@ -16,7 +16,7 @@
   <% matches.each do |match| %>
     <li>
       <a class="match button" href="/matches/<%= match[:id] %>">
-        <%= match[:participants].empty? && 'nobody is in here now' || match[:participants].join(' vs. ') %>
+        <%= match[:participants].empty? && 'nobody is in here now, come and play' || match[:participants].join(' vs. ') %>
       </a>
     </li>
   <% end %>

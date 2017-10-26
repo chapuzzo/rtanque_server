@@ -118,7 +118,7 @@ class App < Sinatra::Base
     matches_list = Matches.map { |id, match|
       {
         id: id,
-        participants: match[:brains].map { |k| k.name.split('::').last }
+        participants: match[:brains].map { |k| k::NAME || k.name.split('::').last }
       }
     }
 
@@ -126,12 +126,61 @@ class App < Sinatra::Base
   end
 
   get '/matches/:match' do |match_id|
-    return [404, 'unexisting_match'] if Matches[match_id].nil?
+    halt [404, erb('unexisting_match')] if Matches[match_id].nil?
 
     erb :show_match, locals: {
-      participants: Matches[match_id][:brains].map { |k| k.name.split('::').last },
+      participants: Matches[match_id][:brains].map { |k| k::NAME || k.name.split('::').last },
       match_id: match_id
     }
+  end
+
+  get '/matches/:match/play', provides: :json do |match_id|
+    halt [404, erb('unexisting_match')] if Matches[match_id].nil?
+
+    @match_time = 0
+
+    brains = Matches[match_id][:brains]
+
+    match = RTanque::Match.new(RTanque::Arena.new(500, 500), 10000)
+
+    bots = brains.map do |brain|
+      RTanque::Bot.new_random_location(match.arena, brain)
+    end
+
+    match_thread = Thread.new do
+      bots.each do |bot|
+        bot.brain.instance_variable_set(:@friendly_fire, true)
+        match.add_bots(bot)
+      end
+
+      match.start
+    end
+
+    watchdog = Thread.new do
+      60.times do
+        Thread.exit unless match_thread.alive?
+        @match_time += 1
+        sleep 1
+      end
+
+      match_thread.kill if match_thread.alive?
+    end
+
+    watchdog.join
+
+    survivors = match.bots.map do |bot|
+      {
+        name: bot.name,
+        health: bot.health.round
+      }
+    end
+
+    {
+      status: :ok,
+      survivors: survivors,
+      ticks: match.ticks,
+      time: @match_time
+    }.to_json
   end
 
   helpers do

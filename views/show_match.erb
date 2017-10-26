@@ -10,10 +10,8 @@
   <% end %>
 </ul>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.min.js" integrity="sha256-aXHOBRCjmgqoEhY6VBWs3Bc+E3447Iuywezt+nkgeZk=" crossorigin="anonymous"></script>
-
-<input class="button" id="play-match" type="button" value="View Match">
-<label class="button" for="add-bots">Add Bots</label>
+<label id="add-bots-button" class="button" for="add-bots">Add Bots</label>
+<a class="button" id="play-match" href="/matches/<%= match_id %>/play">Play Match</a>
 
 <input hidden id="add-bots" type="checkbox" autocomplete="off">
 <div id="editor">
@@ -46,8 +44,14 @@
     background-color: #B78E8E
   }
 
-  #add {
+  #add,
+  #play-match {
     background-color: #8EB79B
+  }
+
+  #load,
+  #add-bots-button {
+    background-color: #AFC8FF
   }
 </style>
 
