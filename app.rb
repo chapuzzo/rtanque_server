@@ -134,7 +134,7 @@ class App < Sinatra::Base
     }
   end
 
-  get '/matches/:match/play', provides: :json do |match_id|
+  get '/matches/:match/play' do |match_id|
     halt [404, erb('unexisting_match')] if Matches[match_id].nil?
 
     @match_time = 0
@@ -175,12 +175,17 @@ class App < Sinatra::Base
       }
     end
 
-    {
+    erb({
       status: :ok,
       survivors: survivors,
       ticks: match.ticks,
       time: @match_time
-    }.to_json
+    }.to_json(
+      indent: '&nbsp;&nbsp;',
+      space: '&nbsp;',
+      object_nl: '<br>',
+      array_nl: '<br>'
+    ))
   end
 
   helpers do
