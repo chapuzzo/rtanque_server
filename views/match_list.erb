@@ -15,7 +15,7 @@
 <ul>
   <% matches.each do |match| %>
     <li>
-      <a class="match button" href="/matches/<%= match[:id] %>">
+      <a class="match button" href="<%= match[:id] %>/">
         <%= match[:participants].empty? && 'nobody is in here now, come and play' || match[:participants].join(' vs. ') %>
       </a>
     </li>
@@ -27,7 +27,7 @@
 <script>
   document.addEventListener('DOMContentLoaded', function(){
     document.getElementById('new-match').addEventListener('click', function(){
-      axios.post('/matches/create').then(() => {
+      axios.post('create').then(() => {
         location.reload()
       })
     })

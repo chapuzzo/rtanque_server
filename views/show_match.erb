@@ -11,7 +11,7 @@
 </ul>
 
 <label id="add-bots-button" class="button" for="add-bots">Add Bots</label>
-<a class="button" id="play-match" href="/matches/<%= match_id %>/play">Play Match</a>
+<a class="button" id="play-match" href="<%= match_id %>/play">Play Match</a>
 
 <input hidden id="add-bots" type="checkbox" autocomplete="off">
 <div id="editor">
@@ -100,7 +100,7 @@ end
       var fd = new FormData()
       fd.append('code', editor.getValue())
 
-      axios.post(`/matches/${match}/add_bots`, fd).then(function(){
+      axios.post('./add_bots', fd).then(function(){
         console.log('bot added')
         location.reload()
       }).catch(function(){
