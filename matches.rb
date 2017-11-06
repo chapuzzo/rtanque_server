@@ -1,116 +1,44 @@
-require 'securerandom'
+require './services/matches'
 require 'sinatra/base'
-require 'rtanque'
 require 'json'
-require 'ap'
 
 class Matches < Sinatra::Base
 
-  Matches = {}
-
   post '/create', provides: :json do
-    created_match = {
-      brains: []
-    }
+    created_match = Services::Matches.create
 
-    match_name = SecureRandom.uuid
-
-    Matches[match_name] = created_match
-
-    {
-      status: :ok,
-      match: match_name
-    }.to_json
+    ok match: created_match
   end
 
   post '/:match/add_bots', provides: :json do |id|
-    return {
-      status: :ko,
-      reason: :unexisting_match
-    }.to_json if Matches[id].nil?
+    ko unless Services::Matches.exists? id
 
-    match = Matches[id]
+    Services::Matches.add_bots id, params[:code]
 
-    classes = class_diff(params[:code], Object, Class.new)
-    bot_brain_classes = get_descendants_of_class(RTanque::Bot::Brain)
-
-    new_brains = (bot_brain_classes - match[:brains]).select do |brain|
-      classes.include? brain
-    end
-
-    match[:brains].push(*(new_brains))
-
-    {
-      status: :ok
-    }.to_json
+    ok
   end
 
   get '/' do
-    matches_list = Matches.map { |id, match|
-      {
-        id: id,
-        participants: participant_names(match)
-      }
-    }
-
+    matches_list = Services::Matches.list
     erb :match_list, locals: { matches: matches_list }
   end
 
   get '/:match/' do |id|
-    halt [404, erb('unexisting_match')] if Matches[id].nil?
+    halt [404, erb('unexisting_match')] unless Services::Matches.exists? id
 
     erb :show_match, locals: {
-      participants: participant_names(Matches[id])
+      participants: Services::Matches.participants(id)
     }
   end
 
   get '/:match/play' do |id|
-    halt [404, erb('unexisting_match')] if Matches[id].nil?
+    halt [404, erb('unexisting_match')] unless Services::Matches.exists? id
 
-    @match_time = 0
-
-    brains = Matches[id][:brains]
-
-    match = RTanque::Match.new(RTanque::Arena.new(500, 500), 10000)
-
-    bots = brains.map do |brain|
-      RTanque::Bot.new_random_location(match.arena, brain)
-    end
-
-    match_thread = Thread.new do
-      bots.each do |bot|
-        bot.brain.instance_variable_set(:@friendly_fire, true)
-        match.add_bots(bot)
-      end
-
-      match.start
-    end
-
-    watchdog = Thread.new do
-      60.times do
-        Thread.exit unless match_thread.alive?
-        @match_time += 1
-        sleep 1
-      end
-
-      match_thread.kill if match_thread.alive?
-    end
-
-    watchdog.join
-
-    survivors = match.bots.map do |bot|
-      {
-        name: bot.name,
-        health: bot.health.round
-      }
-    end
+    match_result = Services::Matches.play id
 
     erb(['<pre>', '</pre>'].join({
-      status: :ok,
-      survivors: survivors,
-      ticks: match.ticks,
-      time: @match_time
-    }.to_json(
+      status: :ok
+    }.merge(match_result).to_json(
       indent: '  ',
       space: ' ',
       object_nl: "\n",
@@ -119,22 +47,15 @@ class Matches < Sinatra::Base
   end
 
   helpers do
-    def class_diff from, under, to
-      current_object_space = get_descendants_of_class(under)
-      to.class_eval(from)
-      get_descendants_of_class(under) - current_object_space
+    def ok message = {}
+      {status: :ok}.merge(message).to_json
     end
 
-    def get_descendants_of_class(klass)
-      ::ObjectSpace.each_object(::Class).select {|k| k < klass }
-    end
-
-    def participant_names match
-      match[:brains].map { |brain| name_that_bot brain }
-    end
-
-    def name_that_bot brain
-      brain.const_defined?(:NAME) && brain.const_get(NAME) || brain.name.split('::').last
+    def ko
+      halt({
+        status: :ko,
+        reason: :unexisting_match
+      }.to_json)
     end
   end
 end

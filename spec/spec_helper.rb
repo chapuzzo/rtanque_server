@@ -4,7 +4,7 @@ require 'ap'
 
 ENV['RACK_ENV'] = 'test'
 
-require File.join(File.dirname(__FILE__), '..', 'app')
+require File.join(File.dirname(__FILE__), '..', 'matches')
 
 def app
   $app ||= Rack::Builder.parse_file(File.expand_path('../../config.ru', __FILE__)).first
