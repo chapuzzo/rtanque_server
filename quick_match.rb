@@ -8,7 +8,6 @@ class QuickMatch < Sinatra::Base
 
   ImportedBots = Module.new
 
-
   get '/' do
     erb :quick_match, layout: false
   end
@@ -20,9 +19,13 @@ class QuickMatch < Sinatra::Base
     bot_brain_classes = get_descendants_of_class(RTanque::Bot::Brain)
     ap bot_brain_classes
 
+    brains_to_add = bot_brain_classes.select do |brain|
+      classes.include? brain
+    end
+
     match = RTanque::Match.new(RTanque::Arena.new(500, 500), 10000)
 
-    bots = bot_brain_classes.map do |brain|
+    bots = brains_to_add.map do |brain|
       RTanque::Bot.new_random_location(match.arena, brain)
     end
 
@@ -41,7 +44,7 @@ class QuickMatch < Sinatra::Base
       end
 
       match.start
-      ap :match_ended
+      ap :match_ended_gracefully
     end
 
     watchdog = Thread.new do
@@ -67,9 +70,12 @@ class QuickMatch < Sinatra::Base
       }
     end
 
-    # ImportedBots.constants.each do |constant|
-    #   ImportedBots.send(:remove_const, constant)
-    # end
+    ImportedBots.constants.each do |constant|
+      ap :removing
+      ap constant
+      ImportedBots.send(:remove_const, constant)
+    end
+    ap ImportedBots.constants
 
     {
       status: :ok,

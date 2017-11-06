@@ -11,7 +11,7 @@
 </ul>
 
 <label id="add-bots-button" class="button" for="add-bots">Add Bots</label>
-<a class="button" id="play-match" href="<%= match_id %>/play">Play Match</a>
+<a class="button" id="play-match" href="play">Play Match</a>
 
 <input hidden id="add-bots" type="checkbox" autocomplete="off">
 <div id="editor">
@@ -95,12 +95,12 @@ end
     editor.setValue(sampleCode)
   }
 
-  var setUpSendToServer = function(match){
+  var setUpSendToServer = function(){
     document.getElementById('add').addEventListener('click',  function(){
       var fd = new FormData()
       fd.append('code', editor.getValue())
 
-      axios.post('./add_bots', fd).then(function(){
+      axios.post('add_bots', fd).then(function(){
         console.log('bot added')
         location.reload()
       }).catch(function(){
@@ -143,7 +143,7 @@ end
     console.log('settingupeditor')
     setUpCompletions()
     setUpCodeMirror()
-    setUpSendToServer('<%= match_id %>')
+    setUpSendToServer()
     setUpFileLoad()
     setUpClear()
   }

@@ -4,7 +4,7 @@ require 'rtanque'
 require 'json'
 require 'ap'
 
-class App < Sinatra::Base
+class Matches < Sinatra::Base
 
   Matches = {}
 
@@ -23,13 +23,13 @@ class App < Sinatra::Base
     }.to_json
   end
 
-  post '/:match/add_bots', provides: :json do |match_id|
+  post '/:match/add_bots', provides: :json do |id|
     return {
       status: :ko,
       reason: :unexisting_match
-    }.to_json if Matches[match_id].nil?
+    }.to_json if Matches[id].nil?
 
-    match = Matches[match_id]
+    match = Matches[id]
 
     classes = class_diff(params[:code], Object, Class.new)
     bot_brain_classes = get_descendants_of_class(RTanque::Bot::Brain)
@@ -49,28 +49,27 @@ class App < Sinatra::Base
     matches_list = Matches.map { |id, match|
       {
         id: id,
-        participants: match[:brains].map { |k| k::NAME || k.name.split('::').last }
+        participants: participant_names(match)
       }
     }
 
     erb :match_list, locals: { matches: matches_list }
   end
 
-  get '/:match/' do |match_id|
-    halt [404, erb('unexisting_match')] if Matches[match_id].nil?
+  get '/:match/' do |id|
+    halt [404, erb('unexisting_match')] if Matches[id].nil?
 
     erb :show_match, locals: {
-      participants: Matches[match_id][:brains].map { |k| k::NAME || k.name.split('::').last },
-      match_id: match_id
+      participants: participant_names(Matches[id])
     }
   end
 
-  get '/:match/play' do |match_id|
-    halt [404, erb('unexisting_match')] if Matches[match_id].nil?
+  get '/:match/play' do |id|
+    halt [404, erb('unexisting_match')] if Matches[id].nil?
 
     @match_time = 0
 
-    brains = Matches[match_id][:brains]
+    brains = Matches[id][:brains]
 
     match = RTanque::Match.new(RTanque::Arena.new(500, 500), 10000)
 
@@ -106,17 +105,17 @@ class App < Sinatra::Base
       }
     end
 
-    erb({
+    erb(['<pre>', '</pre>'].join({
       status: :ok,
       survivors: survivors,
       ticks: match.ticks,
       time: @match_time
     }.to_json(
-      indent: '&nbsp;&nbsp;',
-      space: '&nbsp;',
-      object_nl: '<br>',
-      array_nl: '<br>'
-    ))
+      indent: '  ',
+      space: ' ',
+      object_nl: "\n",
+      array_nl: "\n"
+    )))
   end
 
   helpers do
@@ -128,6 +127,14 @@ class App < Sinatra::Base
 
     def get_descendants_of_class(klass)
       ::ObjectSpace.each_object(::Class).select {|k| k < klass }
+    end
+
+    def participant_names match
+      match[:brains].map { |brain| name_that_bot brain }
+    end
+
+    def name_that_bot brain
+      brain.const_defined?(:NAME) && brain.const_get(NAME) || brain.name.split('::').last
     end
   end
 end

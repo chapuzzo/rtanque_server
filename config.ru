@@ -1,11 +1,10 @@
 require 'ap'
+require './root'
 require './quick_match'
-require './app'
+require './matches'
 
-map '/quick_match' do
-  run QuickMatch
-end
-
-map '/' do
-  run App
-end
+run Rack::URLMap.new({
+  '/' => Root,
+  '/m' => Matches,
+  '/qm' => QuickMatch
+})

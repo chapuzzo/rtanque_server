@@ -54,7 +54,7 @@
       background-color: #B78E8E
     }
 
-    #send {
+    #fight {
       background-color: #8EB79B
     }
 
@@ -68,7 +68,7 @@
       <input id="file_load" type="file" style="display:none" multiple>
       load"
     </label>
-    <input type="button" value="send" id="send" class="button">
+    <input type="button" value="fight" id="fight" class="button">
     <input type="button" value="clear" id="clear" class="button">
   </div>
 
@@ -78,14 +78,11 @@
       CodeMirror.showHint(cm, CodeMirror.hint.anyword)
     }
 
-    var sampleCode = `class A
-  def x
-    puts 'calling x in A instance'
+    var sampleCode = `class MyKillerBot < RTanque::Bot::Brain
+  def tick!
+    puts 'doing somethin very killer'
   end
-end
-
-a = A.new
-a.x`
+end`
 
     var codeMirrorSettings = {
       mode: 'ruby',
@@ -114,11 +111,13 @@ a.x`
     }
 
     var setUpSendToServer = function(){
-      document.getElementById('send').addEventListener('click',  function(){
+      document.getElementById('fight').addEventListener('click',  function(){
         var fd = new FormData()
         fd.append('code', editor.getValue())
 
-        axios.post('', fd)
+        axios.post('', fd).then((response) => {
+          document.body.innerHTML = JSON.stringify(response.data)
+        })
       })
     }
 

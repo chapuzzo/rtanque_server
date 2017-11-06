@@ -27,8 +27,8 @@
 <script>
   document.addEventListener('DOMContentLoaded', function(){
     document.getElementById('new-match').addEventListener('click', function(){
-      axios.post('create').then(() => {
-        location.reload()
+      axios.post('create').then((response) => {
+        document.location = response.data.match + '/'
       })
     })
   })
