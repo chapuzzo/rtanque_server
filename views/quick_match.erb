@@ -80,7 +80,7 @@
 
     var sampleCode = `class MyKillerBot < RTanque::Bot::Brain
   def tick!
-    puts 'doing somethin very killer'
+     # doing somethin very killer'
   end
 end`
 
@@ -116,7 +116,7 @@ end`
         fd.append('code', editor.getValue())
 
         axios.post('', fd).then((response) => {
-          document.body.innerHTML = JSON.stringify(response.data)
+          document.body.innerHTML = response.data
         })
       })
     }
