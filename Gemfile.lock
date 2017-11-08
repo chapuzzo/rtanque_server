@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/devscola/RTanque
-  revision: 6b28edea6b3379c4721a75ebb2e74b4d96ba1a91
+  revision: d543c23d4ccd8327064b643a29440937bf8c89b1
   branch: core
   specs:
     rtanque_core (0.2.0)
