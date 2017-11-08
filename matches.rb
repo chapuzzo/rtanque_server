@@ -49,6 +49,12 @@ class Matches < Sinatra::Base
     match_result.to_json
   end
 
+  get '/:match/view' do |id|
+    halt [404, erb('unexisting_match')] unless Services::Matches.exists? id
+
+    send_file './static/index.html'
+  end
+
   helpers do
     def ok message = {}
       {status: :ok}.merge(message).to_json

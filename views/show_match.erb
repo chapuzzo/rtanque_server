@@ -11,7 +11,8 @@
 </ul>
 
 <label id="add-bots-button" class="button" for="add-bots">Add Bots</label>
-<a class="button" id="play-match" href="play">Play Match</a>
+<a class="button" id="play-match" href="view">View Match</a>
+<a class="button" id="download-match" href="play">Download Match</a>
 
 <input hidden id="add-bots" type="checkbox" autocomplete="off">
 <div id="editor">
@@ -19,11 +20,11 @@
   <div class="controls">
     <label id="load" for="file_load" class="button">
       <input id="file_load" type="file" hidden multiple>
-      load"
+      load from file
     </label>
-    <input type="button" value="add" id="add" class="button">
-    <input type="button" value="clear" id="clear" class="button">
-    <label class="button" for="add-bots">cancel</label>
+    <input type="button" value="add to match" id="add" class="button">
+    <input type="button" value="clear editor" id="clear" class="button">
+    <label class="button" for="add-bots">cancel adding</label>
   </div>
 </div>
 
@@ -59,7 +60,7 @@
 
   var sampleCode = `class MyKillerBot < RTanque::Bot::Brain
   def tick!
-    puts 'doing somethin very killer'
+    # now do something very killer
   end
 end
 `

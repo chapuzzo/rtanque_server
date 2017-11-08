@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf8">
+	<title>RTanque Web</title>
+</head>
+<body>
+	<script type="text/javascript" >
+		window.scenes = []
+		window.started = false
+
+		var createArena = function(size){
+			var canvas = document.createElement('canvas')
+			canvas.height = size.height
+			canvas.width = size.width
+			canvas.backgroundColor = 'wheat'
+			document.body.appendChild(canvas)
+
+			return canvas
+		}
+
+		var createScoreBoard = function(){
+			var scoreBoard = document.createElement('div')
+			document.body.appendChild(scoreBoard)
+
+			return scoreBoard
+		}
+
+		var botWidth = 20
+		var botHeight = 20
+
+		var botBox = function(coords){
+			return [
+				coords.x - botWidth/2,
+				arena.height - coords.y - botHeight/2,
+				botWidth,
+				botHeight
+			]
+		}
+
+		var healthColor = function(health) {
+			var r = 0
+			var g = 0
+			var b = 0
+
+			var g = 255 * health / 150
+			var r = 255 - 255 * health / 150
+
+
+			return 'rgb('+r+','+g+','+b+')'
+		}
+
+		var drawBots = function(arena, bots){
+			var ctx = arena.getContext('2d')
+			ctx.fillStyle = 'black'
+			ctx.fillRect(0, 0, arena.width, arena.height)
+
+			bots.forEach(function(bot, index){
+				if (bot.dead)
+					return
+
+				ctx.save();
+				ctx.beginPath();
+				// ctx.translate(bot.position.x, bot.position.y);
+				// ctx.rotate(bot.heading);
+				ctx.rect.apply(ctx, botBox(bot.position));
+				ctx.fillStyle = healthColor(bot.health);
+				ctx.fill();
+				ctx.lineWidth = 2;
+				ctx.strokeStyle = "wheat";
+				ctx.stroke();
+				ctx.closePath();
+
+				ctx.font = '16px arial'
+				ctx.fillStyle = 'black'
+				ctx.textBaseline = 'middle'
+				ctx.fillText(index, bot.position.x - botWidth/4 , arena.height - bot.position.y)
+
+				ctx.restore();
+
+			})
+		}
+
+		var drawShells = function(arena, shells){
+			var ctx = arena.getContext('2d')
+
+			shells.forEach(function(shell){
+				ctx.save();
+				ctx.beginPath();
+				ctx.arc(shell.position.x, arena.height - shell.position.y, 2, 0, 2*Math.PI);
+				ctx.fillStyle = 'maroon';
+				ctx.fill();
+				ctx.lineWidth = 1;
+				ctx.strokeStyle = "wheat";
+				ctx.stroke();
+				ctx.closePath();
+				ctx.restore();
+			})
+		}
+
+		var drawExplosions = function(arena, explosions){
+			var ctx = arena.getContext('2d')
+
+			explosions.forEach(function(explosion){
+				ctx.save();
+				ctx.beginPath();
+				ctx.arc(explosion.position.x, arena.height - explosion.position.y, 20, 0, 2*Math.PI);
+				ctx.fillStyle = 'white';
+				ctx.fill();
+				ctx.lineWidth = 1;
+				ctx.strokeStyle = "wheat";
+				ctx.stroke();
+				ctx.closePath();
+				ctx.restore();
+			})
+		}
+
+
+		var play = function(){
+			if (scenes.length > 0){
+				var currentScene = scenes.shift()
+				drawBots(arena, currentScene.bots)
+				drawShells(arena, currentScene.shells)
+				drawExplosions(arena, currentScene.explosions)
+
+				scoreBoard.innerHTML = currentScene.bots.map(function(bot, index){
+					return index + ':' + JSON.stringify({[bot.name]: bot.health})
+				}).join('<br>')
+			}
+
+			setTimeout(play, 20)
+		}
+
+		var request = function(method, route, callback, body){
+		  var xhr = new XMLHttpRequest()
+		  xhr.open(method, route)
+		  xhr.responseType = 'json'
+		  xhr.addEventListener('load', function(event){
+		    if (callback)
+		      callback(event.target.response)
+		  })
+		  xhr.send(body)
+		}
+
+		request('GET', 'play', function(match){
+			console.log(match)
+			window.arena = createArena(match.arena)
+			window.scoreBoard = createScoreBoard()
+			scenes = match.scenes.map(function(sceneContainer){
+				return sceneContainer.scene
+			})
+
+			started = true
+			play()
+		})
+
+	</script>
+</body>
+</html>
