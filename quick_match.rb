@@ -79,6 +79,7 @@ class QuickMatch < Sinatra::Base
 
     erb(['<pre>', '</pre>'].join({
       status: :ok,
+      ticks: match.ticks,
       survivors: survivors
     }.to_json(
       indent: '  ',
