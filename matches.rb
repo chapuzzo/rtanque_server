@@ -36,15 +36,6 @@ class Matches < Sinatra::Base
 
     match_result = Services::Matches.play id
 
-    erb(['<pre>', '</pre>'].join({
-      status: :ok
-    }.merge(match_result).to_json(
-      indent: '  ',
-      space: ' ',
-      object_nl: "\n",
-      array_nl: "\n"
-    )))
-
     attachment 'play.json'
     match_result.to_json
   end
