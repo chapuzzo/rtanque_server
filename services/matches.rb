@@ -4,6 +4,10 @@ require 'ap'
 
 module Services
   class Matches
+    MAX_MATCH_TICKS = 10000
+    MAX_MATCH_TIME = 60
+    CHECK_INTERVAL = 1
+
     Matches = {}
 
     class << self
@@ -50,11 +54,22 @@ module Services
       end
 
       def play id, seed = Kernel.srand
-        @match_time = 0
-
         brains = Matches[id][:brains]
 
-        match = RTanque::Match.new(RTanque::Arena.new(500, 500), 10000)
+        match = RTanque::SerializableMatch.new(RTanque::Match.new(RTanque::Arena.new(500, 500), MAX_MATCH_TICKS))
+
+        match.instance_exec {
+          @scenes = []
+
+          def tick
+            @match.tick
+            @scenes << self.snapshot
+          end
+
+          def start
+            self.tick until self.finished?
+          end
+        }
 
         bots = brains.map do |brain|
           RTanque::Bot.new_random_location(match.arena, brain)
@@ -70,28 +85,20 @@ module Services
         end
 
         watchdog = Thread.new do
-          60.times do
-            Thread.exit unless match_thread.alive?
-            @match_time += 1
-            sleep 1
+          (MAX_MATCH_TIME/CHECK_INTERVAL).round.times do
+            sleep CHECK_INTERVAL
+            next if match_thread.alive?
+            Thread.exit
           end
 
-          match_thread.kill if match_thread.alive?
+          match_thread.kill
         end
 
         watchdog.join
 
-        survivors = match.bots.map do |bot|
-          {
-            name: bot.name,
-            health: bot.health.round
-          }
-        end
-
         {
-          survivors: survivors,
-          ticks: match.ticks,
-          time: @match_time
+          arena: match.arena.to_h,
+          scenes: match.instance_exec { @scenes }
         }
       end
 
@@ -111,7 +118,7 @@ module Services
         end
 
         def name_that_bot brain
-          brain.const_defined?(:NAME) && brain.const_get(NAME) || brain.name.split('::').last
+          brain.const_defined?(:NAME) && brain.const_get(:NAME) || brain.name.split('::').last
         end
     end
   end

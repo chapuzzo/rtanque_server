@@ -74,6 +74,27 @@ describe 'Matches' do
     expect(generated_brains.length).to eq(1)
   end
 
+  it 'returns a json with played match' do
+    stub_const('SecureRandom', fake_secure_random)
+    stub_const('Services::Matches::CHECK_INTERVAL', 0.1)
+    stub_const('Services::Matches::MAX_MATCH_TIME', 1)
+    stub_const('Services::Matches::MAX_MATCH_TICKS', 1)
+
+    bot_definition = <<~EOB
+      class MySuperBot < RTanque::Bot::Brain
+        def tick!; end
+      end
+    EOB
+
+    create_match fake_secure_random, 'sample_uuid'
+    add_bot_to_match bot_definition, 'sample_uuid'
+    add_bot_to_match bot_definition, 'sample_uuid'
+
+    get '/m/sample_uuid/play'
+    expect(last_response.headers).to include('Content-Type' => 'application/json')
+    expect(last_response.headers).to include('Content-Disposition' => /^attachment;/)
+  end
+
   def add_bot_to_match bot_definition, match
     post "/m/#{match}/add_bots", code: bot_definition
     expect(parsed_response[:status]).to eq('ok')
@@ -83,6 +104,7 @@ describe 'Matches' do
     allow(id_generator).to receive(:uuid).and_return desired_id
 
     post '/m/create'
+
     expect(parsed_response[:status]).to eq('ok')
   end
 end

@@ -44,6 +44,9 @@ class Matches < Sinatra::Base
       object_nl: "\n",
       array_nl: "\n"
     )))
+
+    attachment 'play.json'
+    match_result.to_json
   end
 
   helpers do
