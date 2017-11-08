@@ -20,7 +20,7 @@
   <div class="controls">
     <label id="load" for="file_load" class="button">
       <input id="file_load" type="file" hidden multiple>
-      load from file
+      load from file(s)
     </label>
     <input type="button" value="add to match" id="add" class="button">
     <input type="button" value="clear editor" id="clear" class="button">
@@ -130,6 +130,8 @@ end
         readFileContents(file, function(textToAdd){
           editor.setValue(editor.getValue() + '\n' + textToAdd)
         })
+
+        swal('Now you can tweak that before sending to the battle')
       })
     })
   }
