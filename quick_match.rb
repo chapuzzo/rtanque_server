@@ -12,7 +12,7 @@ class QuickMatch < Sinatra::Base
     erb :quick_match, layout: false
   end
 
-  post '/', provides: :json do
+  post '/' do
     classes = extract_class_from(params[:code], Object)
     ap classes
 
@@ -77,10 +77,15 @@ class QuickMatch < Sinatra::Base
     end
     ap ImportedBots.constants
 
-    {
+    erb(['<pre>', '</pre>'].join({
       status: :ok,
       survivors: survivors
-    }.to_json
+    }.to_json(
+      indent: '  ',
+      space: ' ',
+      object_nl: "\n",
+      array_nl: "\n"
+    )), layout: false)
   end
 
   helpers do
