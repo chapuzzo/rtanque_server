@@ -30,7 +30,7 @@ module Services
       def add_bots id, code
         match = Matches[id]
 
-        classes = class_diff(code, Object, Class.new)
+        classes = get_definitions(code, Object, Module.new)
         bot_brain_classes = get_descendants_of_class(RTanque::Bot::Brain)
 
         new_brains = (bot_brain_classes - match[:brains]).select do |brain|
@@ -103,14 +103,14 @@ module Services
       end
 
       private
-        def class_diff from, under, to
+        def get_definitions from, under, holder
           current_object_space = get_descendants_of_class(under)
-          to.class_eval(from)
+          holder.instance_eval(from)
           get_descendants_of_class(under) - current_object_space
         end
 
-        def get_descendants_of_class(klass)
-          ::ObjectSpace.each_object(::Class).select {|k| k < klass }
+        def get_descendants_of_class parent
+          ::ObjectSpace.each_object(::Class).select {|k| k < parent }
         end
 
         def participant_names match
