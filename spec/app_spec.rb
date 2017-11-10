@@ -95,6 +95,29 @@ describe 'Matches' do
     expect(last_response.headers).to include('Content-Disposition' => /^attachment;/)
   end
 
+  it 'can redefine/extend rtanque classes/modules' do
+
+    bot_definition = <<~EOB
+      class MySuperBot < RTanque::Bot::Brain
+        def tick!; end
+      end
+
+      class RTanque::Point
+        def w
+          puts :w
+        end
+      end
+    EOB
+
+    create_match fake_secure_random, 'sample_uuid'
+
+    expect {
+      add_bot_to_match bot_definition, 'sample_uuid'
+    }.to change {
+      RTanque::Point.new.respond_to?(:w)
+    }
+  end
+
   def add_bot_to_match bot_definition, match
     post "/m/#{match}/add_bots", code: bot_definition
     expect(parsed_response[:status]).to eq('ok')
