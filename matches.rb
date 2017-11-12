@@ -24,7 +24,7 @@ class Matches < Sinatra::Base
   end
 
   get '/:match/' do |id|
-    halt [404, erb('unexisting_match')] unless Services::Matches.exists? id
+    halt [404, erb(:unexisting_match)] unless Services::Matches.exists? id
 
     erb :show_match, locals: {
       participants: Services::Matches.participants(id)
@@ -32,7 +32,7 @@ class Matches < Sinatra::Base
   end
 
   get '/:match/play' do |id|
-    halt [404, erb('unexisting_match')] unless Services::Matches.exists? id
+    halt [404, erb(:unexisting_match)] unless Services::Matches.exists? id
 
     match_result = Services::Matches.play id
 
@@ -41,7 +41,7 @@ class Matches < Sinatra::Base
   end
 
   get '/:match/view' do |id|
-    halt [404, erb('unexisting_match')] unless Services::Matches.exists? id
+    halt [404, erb(:unexisting_match)] unless Services::Matches.exists? id
 
     send_file './static/index.html'
   end
