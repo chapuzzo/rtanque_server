@@ -24,16 +24,21 @@
     </label>
     <input type="button" value="add to match" id="add" class="button">
     <input type="button" value="clear editor" id="clear" class="button">
+    <label id="toggle-library" class="button" for="show-library">from library</label>
     <label class="button" for="add-bots">cancel adding</label>
+    <input hidden id="show-library" type="checkbox" autocomplete="off">
+    <div id="bots-library"></div>
   </div>
 </div>
 
 <style type="text/css">
-  #add-bots + #editor {
+  #add-bots + #editor,
+  #show-library + #bots-library {
     display: none;
   }
 
-  #add-bots:checked + #editor {
+  #add-bots:checked + #editor,
+  #show-library:checked + #bots-library {
     display: block;
   }
 
@@ -46,12 +51,14 @@
   }
 
   #add,
-  #play-match {
+  #play-match,
+  #toggle-library {
     background-color: #8EB79B
   }
 
   #load,
-  #add-bots-button {
+  #add-bots-button,
+  #bots-library .button {
     background-color: #AFC8FF
   }
 </style>
@@ -142,6 +149,25 @@ end
     })
   }
 
+  var setUpLibrary = function(){
+    axios.get('/bots/library').then(function(response){
+      var botsLibrary = document.getElementById('bots-library')
+      response.data.bots.forEach(function(bot){
+        var botButton = document.createElement('input')
+        botButton.type = 'button'
+        botButton.classList.add('button')
+        botButton.value = bot.name
+
+        botButton.addEventListener('click', function(){
+          editor.setValue(bot.code)
+        })
+
+        botsLibrary.appendChild(botButton)
+
+      })
+    })
+  }
+
   var setUpEditor = function(){
     console.log('settingupeditor')
     setUpCompletions()
@@ -156,6 +182,7 @@ end
 
     var editorSetUpper = function(){
       setUpEditor()
+      setUpLibrary()
       toggleEditor.removeEventListener('change', editorSetUpper)
     }
 
