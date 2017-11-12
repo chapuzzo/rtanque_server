@@ -27,18 +27,23 @@
     <label id="toggle-library" class="button" for="show-library">from library</label>
     <label class="button" for="add-bots">cancel adding</label>
     <input hidden id="show-library" type="checkbox" autocomplete="off">
-    <div id="bots-library"></div>
+    <div id="bots-library">
+      <div id="bots-library-folders"></div>
+      <div id="bots-library-contents"></div>
+    </div>
   </div>
 </div>
 
 <style type="text/css">
   #add-bots + #editor,
-  #show-library + #bots-library {
+  #show-library + #bots-library,
+  .toggle + .toggleable {
     display: none;
   }
 
   #add-bots:checked + #editor,
-  #show-library:checked + #bots-library {
+  #show-library:checked + #bots-library,
+  .toggle:checked + .toggleable {
     display: block;
   }
 
@@ -57,10 +62,18 @@
   }
 
   #load,
-  #add-bots-button,
-  #bots-library .button {
+  #add-bots-button {
     background-color: #AFC8FF
   }
+
+  .button.bot {
+    background-color: #FFB17A
+  }
+
+  .button.folder {
+    background-color: #CCFF6B
+  }
+
 </style>
 
 <script>
@@ -149,20 +162,69 @@ end
     })
   }
 
+  var drawBot = function(bot, holder){
+    var botButton = document.createElement('input')
+    botButton.type = 'button'
+    botButton.classList.add('button')
+    botButton.classList.add('bot')
+    botButton.value = bot.name
+
+    botButton.addEventListener('click', function(){
+      editor.setValue(bot.code)
+    })
+
+    holder.appendChild(botButton)
+  }
+
+  var drawFolderButton = function(folder, holder){
+    var folderButton = document.createElement('label')
+    folderButton.classList.add('button')
+    folderButton.classList.add('folder')
+    folderButton.innerHTML = folder.name
+    folderButton.htmlFor = 'toggle_' + folder.name
+
+    holder.append(folderButton)
+  }
+
+  var drawFolderContents = function(folder, holder){
+    var folderToggle = document.createElement('input')
+    folderToggle.type = 'radio'
+    folderToggle.name = 'visible-folder'
+    folderToggle.classList.add('toggle')
+    folderToggle.id = 'toggle_' + folder.name
+    folderToggle.autocomplete = 'off'
+    folderToggle.setAttribute('hidden', true)
+
+    var folderContents = document.createElement('div')
+    folderContents.classList.add('toggleable')
+
+    folder.contents.forEach(function(entry){
+      if (entry.type === 'bot')
+        drawBot(entry, folderContents)
+      else
+        drawFolder(entry, folderContents, holder)
+    })
+
+    holder.append(folderToggle)
+    holder.append(folderContents)
+  }
+
+  var drawFolder = function(entry, foldersHolder, contentsHolder){
+    drawFolderButton(entry, foldersHolder)
+    drawFolderContents(entry, contentsHolder)
+  }
+
   var setUpLibrary = function(){
     axios.get('/bots/library').then(function(response){
-      var botsLibrary = document.getElementById('bots-library')
-      response.data.bots.forEach(function(bot){
-        var botButton = document.createElement('input')
-        botButton.type = 'button'
-        botButton.classList.add('button')
-        botButton.value = bot.name
+      var botsLibraryFolders = document.getElementById('bots-library-folders')
+      var botsLibraryContents = document.getElementById('bots-library-contents')
 
-        botButton.addEventListener('click', function(){
-          editor.setValue(bot.code)
-        })
+      response.data.entries.forEach(function(entry){
+        if (entry.type === 'folder')
+          drawFolder(entry, botsLibraryFolders, botsLibraryContents)
 
-        botsLibrary.appendChild(botButton)
+        else
+          drawBot(entry, botsLibraryFolders)
 
       })
     })
