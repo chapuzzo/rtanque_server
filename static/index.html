@@ -3,11 +3,21 @@
 <head>
 	<meta charset="utf8">
   	<meta name="viewport" content="width=device-width,initial-scale=1">
-	<title>RTanque Web</title>
+	<title>RTanque Web · viewer</title>
+	<style type="text/css">
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: monospace;
+		}
+
+	</style>
 </head>
 <body>
 	<script type="text/javascript" >
-		window.scenes = []
+		window.ticks = []
 		window.started = false
 		var botWidth = 20
 		var botHeight = 20
@@ -118,15 +128,19 @@
 
 
 		var play = function(){
-			if (scenes.length > 0){
-				var currentScene = scenes.shift()
+			if (ticks.length > 0){
+				var currentTick = ticks.shift()
+				var currentScene = currentTick.scene
 				drawBots(arena, currentScene.bots)
 				drawShells(arena, currentScene.shells)
 				drawExplosions(arena, currentScene.explosions)
 
-				scoreBoard.innerHTML = currentScene.bots.map(function(bot, index){
-					return index + ':' + JSON.stringify({[bot.name]: bot.health})
-				}).join('<br>')
+				scoreBoard.innerHTML = [
+					'tick: ' + currentTick.tick,
+					currentScene.bots.map(function(bot, index){
+						return index + ':' + JSON.stringify({[bot.name]: bot.health})
+					}).join('<br>')
+				].join('<br>')
 			}
 
 			setTimeout(play, 20)
@@ -147,9 +161,7 @@
 			console.log(match)
 			window.arena = createArena(match.arena)
 			window.scoreBoard = createScoreBoard()
-			scenes = match.scenes.map(function(sceneContainer){
-				return sceneContainer.scene
-			})
+			ticks = match.scenes
 
 			started = true
 			play()
