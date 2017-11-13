@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf8">
-  	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>RTanque Web · viewer</title>
 	<style type="text/css">
 		* {
@@ -23,9 +23,24 @@
 			width: 500px;
 			margin: auto;
 		}
+
+		#loader:after {
+			content: '%'
+		}
+
+		#loader {
+			display: block;
+			font-size: 70px;
+			width: 500px;
+			margin: auto;
+			text-align: center;
+		}
 	</style>
 </head>
 <body>
+
+	<div id="loader">0</div>
+
 	<script type="text/javascript" >
 		window.ticks = []
 		window.started = false
@@ -157,18 +172,30 @@
 			setTimeout(play, 20)
 		}
 
+		var loader = document.getElementById('loader')
 		var request = function(method, route, callback, body){
-		  var xhr = new XMLHttpRequest()
-		  xhr.open(method, route)
-		  xhr.responseType = 'json'
-		  xhr.addEventListener('load', function(event){
-		    if (callback)
-		      callback(event.target.response)
-		  })
-		  xhr.send(body)
+			var xhr = new XMLHttpRequest()
+			xhr.open(method, route)
+			xhr.responseType = 'json'
+			xhr.addEventListener('progress', function(event){
+				console.log(event.lengthComputable)
+				console.log(event.loaded)
+				console.log(event.total)
+				if (event.lengthComputable) {
+					var percentage = (event.loaded / event.total * 100).toFixed(0)
+					loader.innerHTML = percentage
+				}
+
+			})
+			xhr.addEventListener('load', function(event){
+				if (callback)
+					callback(event.target.response)
+			})
+			xhr.send(body)
 		}
 
 		request('GET', 'play', function(match){
+			loader.style.display = 'none'
 			console.log(match)
 			window.arena = createArena(match.arena)
 			window.scoreBoard = createScoreBoard()
