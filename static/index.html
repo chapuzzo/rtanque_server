@@ -13,6 +13,16 @@
 			font-family: monospace;
 		}
 
+		canvas {
+			display: block;
+			margin: auto;
+		}
+
+		.scoreboard {
+			display: block;
+			width: 500px;
+			margin: auto;
+		}
 	</style>
 </head>
 <body>
@@ -34,6 +44,7 @@
 
 		var createScoreBoard = function(){
 			var scoreBoard = document.createElement('div')
+			scoreBoard.classList.add('scoreboard')
 			document.body.appendChild(scoreBoard)
 
 			return scoreBoard
