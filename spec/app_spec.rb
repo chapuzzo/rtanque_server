@@ -96,6 +96,7 @@ describe 'Matches' do
   end
 
   it 'can redefine/extend rtanque classes/modules' do
+    stub_const('SecureRandom', fake_secure_random)
 
     bot_definition = <<~EOB
       class MySuperBot < RTanque::Bot::Brain
