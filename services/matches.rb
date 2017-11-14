@@ -105,7 +105,7 @@ module Services
       private
         def get_definitions from, under, holder
           current_object_space = get_descendants_of_class(under)
-          holder.instance_eval(from)
+          holder.instance_eval(from, '(brain_definition)')
           get_descendants_of_class(under) - current_object_space
         end
 
