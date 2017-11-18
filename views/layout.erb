@@ -11,31 +11,38 @@
     }
 
     body {
-      font-family: monospace;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
     }
 
     .button {
-      border: 1px black solid;
+      border: 1px #565656 solid;
       border-radius: 3px;
-      background: darkgrey;
-      padding: 5px 10px;
-      font-family: monospace;
-      font-size: 1em;
-      color: black;
+      background-color: #CACACA33;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #565656;
       margin: 3px;
       display: inline-block;
       cursor: pointer;
       text-decoration: none;
 
-      -moz-user-select: none;
       -webkit-user-select: none;
+      -moz-user-select: none;
       user-select: none;
+
+      box-shadow: 0px 0px 1px #A9A9A9FF;
     }
 
     .button:hover {
       opacity: 0.8;
-      border-width: 2px;
-      padding: 4px 9px;
+      /*border-width: 2px;*/
+      /*margin: 2px;*/
+      box-shadow: 0px 0px 5px #A9A9A9FF;
+    }
+
+    input {
+      font-family: inherit;
     }
 
     input.button::-moz-focus-inner {
@@ -76,6 +83,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/addon/hint/show-hint.min.css" integrity="sha256-Ng5EdzHS/CC37tR7tE75e4Th9+fBvOB4eYITOkXS22Q=" crossorigin="anonymous" />
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/addon/scroll/simplescrollbars.css" integrity="sha256-4mk7VKvNIWjYnA+rExxtLNsjGaPPI5ql2BRAgmFxQ0E=" crossorigin="anonymous" />
+
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,700" rel="stylesheet">
 </head>
 <body>
   <%= yield %>

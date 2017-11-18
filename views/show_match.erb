@@ -2,7 +2,7 @@
 <% if participants.empty? %>
   <span>No participants yet, go add one :)</span>
 <% end%>
-<ul>
+<ul class="participants">
   <% participants.each do |participant| %>
     <li>
       <span><%= participant %></span>
@@ -10,39 +10,68 @@
   <% end %>
 </ul>
 
-<label id="add-bots-button" class="button" for="add-bots">Add Bots</label>
-<a class="button" id="play-match" href="view">View Match</a>
-<a class="button" id="download-match" href="play">Download Match</a>
+<div class="menu">
+  <span>add bot: </span>
 
-<input hidden id="add-bots" type="checkbox" autocomplete="off">
-<div id="editor">
+  <label id="toggle-library" class="button" for="show-library">from library</label>
+
+  <label id="load" class="button">
+    <input type="file" id="file_load" hidden>
+    from file
+  </label>
+
+  <input type="button" value="create your own" id="create-own" class="button">
+</div>
+
+<input id="show-library" class="toggle" type="checkbox" autocomplete="off" hidden>
+<div id="bots-library" class="toggleable submenu">
+  <div id="bots-library-folders"><span>folder: </span></div>
+  <div id="bots-library-contents"></div>
+</div>
+
+<input id="show-editor" class="toggle" type="checkbox" autocomplete="off" hidden>
+<div id="editor" class="toggleable">
   <textarea id="code"></textarea>
+
   <div class="controls">
-    <label id="load" for="file_load" class="button">
-      <input id="file_load" type="file" hidden multiple>
-      load from file(s)
-    </label>
     <input type="button" value="add to match" id="add" class="button">
     <input type="button" value="clear editor" id="clear" class="button">
-    <label id="toggle-library" class="button" for="show-library">from library</label>
-    <label class="button" for="add-bots">cancel adding</label>
-    <input hidden id="show-library" type="checkbox" autocomplete="off">
-    <div id="bots-library">
-      <div id="bots-library-folders"></div>
-      <div id="bots-library-contents"></div>
-    </div>
+    <input type="button" value="cancel adding" id="hide-editor" class="button">
   </div>
 </div>
 
+<div id="play-buttons">
+  <a class="button" id="play-match" href="view">View Match</a>
+  <a class="button" id="download-match" href="play">Download Match</a>
+</div>
+
 <style type="text/css">
-  #add-bots + #editor,
-  #show-library + #bots-library,
+  .menu,
+  .submenu,
+  #play-buttons {
+    background-color: #f3f3f3;
+    padding: 13px;
+  }
+
+  #play-buttons {
+    margin-top: 10px;
+  }
+
+  .menu .button {
+    text-transform: uppercase;
+  }
+
+  .submenu {
+    background-color: #EDEDED;
+  }
+
+  .button.bot {
+  }
+
   .toggle + .toggleable {
     display: none;
   }
 
-  #add-bots:checked + #editor,
-  #show-library:checked + #bots-library,
   .toggle:checked + .toggleable {
     display: block;
   }
@@ -51,29 +80,21 @@
     text-align: center;
   }
 
-  #clear {
-    background-color: #B78E8E
+  .play {
+    display: none
   }
 
-  #add,
-  #play-match,
-  #toggle-library {
-    background-color: #8EB79B
-  }
-
-  #load,
-  #add-bots-button {
-    background-color: #AFC8FF
+  #bots-library .button {
+    padding: 5px 10px;
   }
 
   .button.bot {
-    background-color: #FFB17A
+    background-color: #FFB17A44;
   }
 
   .button.folder {
-    background-color: #CCFF6B
+    background-color: #CCFF6B44;
   }
-
 </style>
 
 <script>
@@ -116,16 +137,21 @@ end
     editor.setValue(sampleCode)
   }
 
+  var sendToServer = function(code){
+    var fd = new FormData()
+    fd.append('code', code)
+
+    return axios.post('add_bots', fd).then(function(){
+      console.log('bot added')
+    }).catch(function(){
+      console.log('error occured')
+    })
+  }
+
   var setUpSendToServer = function(){
     document.getElementById('add').addEventListener('click',  function(){
-      var fd = new FormData()
-      fd.append('code', editor.getValue())
-
-      axios.post('add_bots', fd).then(function(){
-        console.log('bot added')
+      sendToServer(editor.getValue()).then(function(){
         location.reload()
-      }).catch(function(){
-        console.log('error occured')
       })
     })
   }
@@ -170,7 +196,23 @@ end
     botButton.value = bot.name
 
     botButton.addEventListener('click', function(){
-      editor.setValue(bot.code)
+      swal({
+        text: 'Want to edit it or add to the battle as is?',
+        buttons: {
+          add: true,
+          edit: true
+        }
+      }).then((value) => {
+        if (value === 'edit'){
+          emit(document.getElementById('show-editor'), 'show-editor', {code: bot.code})
+        }
+
+        else {
+          sendToServer(bot.code).then(function(){
+            location.reload()
+          })
+        }
+      })
     })
 
     holder.appendChild(botButton)
@@ -201,6 +243,7 @@ end
     folder.contents.forEach(function(entry){
       if (entry.type === 'bot')
         drawBot(entry, folderContents)
+
       else
         drawFolder(entry, folderContents, holder)
     })
@@ -225,7 +268,6 @@ end
 
         else
           drawBot(entry, botsLibraryFolders)
-
       })
     })
   }
@@ -239,15 +281,52 @@ end
     setUpClear()
   }
 
+  var showPlayButtons = function(){
+    var p = document.querySelectorAll('.participants li')
+    console.log(p)
+    console.log(p.length)
+
+    if (p.length > 1)
+      document.getElementById('play-buttons').style.display = 'block'
+  }
+
+  var emit = function(destination, topic, message){
+    var evt = new CustomEvent(topic, {
+      detail: message
+    })
+
+    destination.dispatchEvent(evt)
+  }
+
   document.addEventListener('DOMContentLoaded', function(){
-    var toggleEditor = document.getElementById('add-bots')
+    setUpLibrary()
+    showPlayButtons()
 
-    var editorSetUpper = function(){
-      setUpEditor()
-      setUpLibrary()
-      toggleEditor.removeEventListener('change', editorSetUpper)
-    }
+    var editorToggle = document.getElementById('show-editor')
+    var hideEditor = document.getElementById('hide-editor')
+    var createOwn = document.getElementById('create-own')
 
-    toggleEditor.addEventListener('change', editorSetUpper)
-  })
+    editorToggle.addEventListener('show-editor', function(event){
+      this.checked = true
+
+      if (!window.editor.setValue){
+        setUpEditor()
+      }
+
+      editor.setValue(event.detail.code)
+    })
+
+    editorToggle.addEventListener('hide-editor', function(){
+      this.checked = false
+    })
+
+    createOwn.addEventListener('click', function(event){
+      emit(editorToggle, 'show-editor', {code: sampleCode})
+    })
+
+    hideEditor.addEventListener('click', function(){
+      emit(editorToggle, 'hide-editor')
+    })
+  });
+
 </script>
